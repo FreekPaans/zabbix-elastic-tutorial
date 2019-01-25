@@ -143,7 +143,7 @@ The credentials for the default user are `Admin`, password `zabbix`. You'll now 
 
 ![/img/zabbix-after-login.png](/img/zabbix-after-login.png)
 
-Great! Zabbix server has been setup. We can now go and create our first host: the web server. To do this, go to _Configuration -> Hosts_. Click the _Create host_ button at the upper left of the screen. Use the following values:
+Great! Zabbix server has been setup. We can now go and create our first host: the web server. To do this, go to _Configuration -> Hosts_. Click the _Create host_ button at the upper right of the screen. Use the following values:
 
 * *Host name* This is an arbitrary host name for Zabbix only. It will be used by the Zabbix Agent running on the web server to identify itself. Pick `demo-web` for now.
 * *Visible name* Is something that you can configure to have the host have a different display name in the Zabbix UI. Leave empty for now, `demo-web` is clear enough.
