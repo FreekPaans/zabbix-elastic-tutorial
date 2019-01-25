@@ -238,3 +238,39 @@ zabbix $ ./mailslurper
 
 Now, unhog the CPU on web (CTRL-C to exit it), and wait for the trigger to disappear. When it's disappeared, restart the hog, and you should be receiving an e-mail. Go to http://192.168.50.4:8080/ to see incoming mails.
 
+
+### End of Zabbix
+This concludes the Zabbix part of the tutorial. As a bonus question: try to setup a custom _item_ yourself.
+
+## Elasticsearch
+This second part of this training covers Elasticsearch. Elasticsearch is a set of tools that allows you to search through logs produced by your system. It consists of a couple of parts
+
+* Elasticsearch, the engine, this is the database so to say.
+* Kibana, this is a tool that allows you to search through the logs.
+* Filebeat, this tools pumps the logs into the database.
+
+### Demo app
+
+*This section assumes you used vagrant to setup the environment, adjust accordingly if you didn't*
+
+But before we get started, we actually need to log something. For this, there is a sample PHP application in the `php-login-app` directory.
+
+Let's get it up and running on web
+
+```
+web $ apt-get install composer apache2 libapache2-mod-php unzip
+web $ cd /vagrant/php-login-app
+web $ composer install
+web $ ln -s /vagrant/php-login-app /var/www/html/php-login-app
+web $ mkdir /logs && chmod 777 /logs
+```
+
+On your host, in your browser go to http://192.168.50.3/php-login-app/
+
+This should provide you with the following nice login screen:
+
+img/login.png
+
+Also, this should have logged something already:
+
+web $ tail /logs/php-login-app.log
