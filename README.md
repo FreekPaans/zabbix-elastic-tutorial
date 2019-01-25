@@ -129,7 +129,7 @@ We now have the Zabbix UI running on the VM. If you used the Vagrant, browse to 
 
 Now walk through the setup wizard. Things that sometimes come up:
 
-* If it requires you to change any PHP settings, do that in /etc/php/7.2/apache2/php.ini, and restart apache `systemctl restart apache2`.
+* If it requires you to change any PHP settings, do that in `/etc/php/7.2/apache2/php.ini`, and restart apache `systemctl restart apache2`.
 * If you need to install a PHP extension, for example gd, do that with apt-get: `apt-get install php-gd`
 * If MySQL is not listed as a DB option, `apt-get install php-mysql && systemctl restart apache2`
 
@@ -148,7 +148,7 @@ Great! Zabbix server has been setup. We can now go and create our first host: th
 * *Host name* This is an arbitrary host name for Zabbix only. It will be used by the Zabbix Agent running on the web server to identify itself. Pick `demo-web` for now.
 * *Visible name* Is something that you can configure to have the host have a different display name in the Zabbix UI. Leave empty for now, `demo-web` is clear enough.
 * *Host groups* Not really important for now, but pick `Linux servers` and `Virtual machines` to be a complacent citizen.
-* *Agent interfaces* This one is important, it specifies how Zabbix Server can reach the agent. The default port is fine, but change the _IP Address_ to the one you used (192.168.50.3 if your using the example Vagrant). Make sure _Connet to_ is kept on IP.
+* *Agent interfaces* This one is important, it specifies how Zabbix Server can reach the agent. The default port is fine, but change the _IP Address_ to the one you used (192.168.50.3 if your using the example Vagrant). Make sure _Connect to_ is kept on IP.
 
 All the other fields are not necessary, but we do like to attach a template, so go to the _Templates_ tab. Add the _Template OS Linux_ template. Notice that this screen has one of the Zabbix quirks mentioned earlier, you first need to click the _Add_ link to add the template, and then the _Add_ button to actually add the host.
 
@@ -348,7 +348,7 @@ $handler->setFormatter(new JsonFormatter());
 $log->pushHandler($handler);
 ```
 
-Configure filebeat by setting `/etc/filebeat/filebeat.yml' to:
+Configure filebeat by setting `/etc/filebeat/filebeat.yml` to:
 ```
 filebeat.inputs:
 - type: log
@@ -376,7 +376,7 @@ Finally, start filebeat:
 web $ systemctl start filebeat
 ```
 
-Now if you go back to Kibana, and then to the _Discover_ tab, it will show it's discovered an index. Create an index pattern for `filebeat-\*`. Index patterns are used by kibana to know which indices it should consider. Select @timestamp as the time column. Finally, go back to discover. Your log messages should be there and fully searchable. Try it out!
+Now if you go back to Kibana, and then to the _Discover_ tab, it will show it's discovered an index. Create an index pattern for `filebeat-*`. Index patterns are used by kibana to know which indices it should consider. Select `@timestamp` as the time column. Finally, go back to discover. Your log messages should be there and fully searchable. Try it out!
 
 Additional fields will also be parsed. Use this to add the login of the user for which the login succeeded or failed.
 
