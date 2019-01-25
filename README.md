@@ -125,7 +125,7 @@ zabbix $ systemctl reload apache2
 
 We now have the Zabbix UI running on the VM. If you used the Vagrant, browse to http://192.168.50.4/zabbix on your host machine. (Replace the IP with your own if you setup manually, I'll assume this IP from now on). It should greet you with something like this:
 
-img/zabbix-installed.png
+![/img/zabbix-installed.png](/img/zabbix-installed.png)
 
 Now walk through the setup wizard. Things that sometimes come up:
 
@@ -137,11 +137,11 @@ In the final step it needs to write out the config file, to allow this temporari
 
 You should now be greeted with this nice login screen:
 
-img/zabbix-after-setup.png
+![/img/zabbix-after-setup.png](/img/zabbix-after-setup.png)
 
 The credentials for the default user are `Admin`, password `zabbix`. You'll now see the following screen
 
-img/zabbix-after-login.png
+![/img/zabbix-after-login.png](/img/zabbix-after-login.png)
 
 Great! Zabbix server has been setup. We can now go and create our first host: the web server. To do this, go to _Configuration -> Hosts_. Click the _Create host_ button at the upper left of the screen. Use the following values:
 
@@ -154,7 +154,7 @@ All the other fields are not necessary, but we do like to attach a template, so 
 
 Congratulations: you've now added your first host to Zabbix. It should look something like this:
 
-img/zabbix-after-host.png
+![/img/zabbix-after-host.png](/img/zabbix-after-host.png)
 
 Unfortunately, the our web VM isn't running an agent yet. So Zabbix will not be able to connect. After a while this will be clear in the UI by having the _Availability_ column in the hosts overview showing a red _ZBX_ to indicate the agent cannot be reached. You can also go to _Monitoring -> Latest data_ and select the `demo-web` host there to verify that the items are there (coming from the _Template OS Linux_ template), but none have any data. So let's setup the agent on the web server now.
 
@@ -188,7 +188,7 @@ web $ tail /var/log/zabbix-agent/zabbix_agentd.log
 
 Now, refresh the _Latest data_ page in Zabbix to see that the data is now flowing in:
 
-img/zabbix-flowing-in.png
+![/img/zabbix-flowing-in.png](/img/zabbix-flowing-in.png)
 
 Congratulations! You've now setup everything correctly. Be sure to look and play around a bit in Zabbix to get a feel of what's happening before you continue. And just for fun, let's hog the CPU a little bit:
 ```
@@ -269,7 +269,7 @@ On your host, in your browser go to http://192.168.50.3/php-login-app/
 
 This should provide you with the following nice login screen:
 
-img/login.png
+![/img/login.png](/img/login.png)
 
 Also, this should have logged something already:
 
@@ -325,7 +325,7 @@ Change `network.host` in `/etc/elasticsearch/elasticsearch.yml` to `0.0.0.0` to 
 
 If you now go on your host to http://192.168.50.4:5601, kibana should be greeting you, with a screen like this:
 
-img/kibana-welcome.png
+![/img/kibana-welcome.png](/img/kibana-welcome.png)
 
 Unfortuntely, there isn't any data in kibana yet. For that we need to setup filebeat on our web node:
 
