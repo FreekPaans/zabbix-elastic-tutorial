@@ -99,7 +99,7 @@ zabbix $ echo 'grant all on zabbix.* to zabbix@localhost' | mysql
 zabbix $ zcat /usr/share/zabbix-server-mysql/{schema,images,data}.sql.gz | mysql -u zabbix zabbix
 
 # start zabbix server
-zabbix $ systemclt start zabbix-server
+zabbix $ systemctl start zabbix-server
 
 # and check if everything is running
 zabbix $ tail /var/log/zabbix-server/zabbix_server.log
