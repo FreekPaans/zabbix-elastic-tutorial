@@ -411,7 +411,7 @@ read -r -d '' TEMPLATE <<'EOF'
       "must": [
         {
           "query_string": {
-            "query": "source:*masty*json* AND loglevel:ERROR",
+            "query": "source:*my-source*json* AND loglevel:ERROR",
             "analyze_wildcard": true,
             "default_field": "*"
           }
