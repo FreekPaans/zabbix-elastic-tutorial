@@ -382,3 +382,82 @@ Additional fields will also be parsed. Use this to add the login of the user for
 
 ## Bonus exercise: add Elasticsearch monitoring to Zabbix
 We'd like to monitor in zabbix how many logins failed the last 5 minutes, and set a trigger when that exceeded a certain amount. We can leverage elasticsearch and zabbix UserParameters to make this happen.
+
+You'll need the following script
+
+```bash
+#!/usr/bin/env bash
+
+DEBUG_FILE=/tmp/debug-zabbix-elastic
+
+if [[ -w  "$DEBUG_FILE" ]]; then
+	echo invoked with "$*" > "$DEBUG_FILE"
+	echo 1st: "$1" > "$DEBUG_FILE"
+fi
+
+QUERY="$1"
+RANGE="${2:--d}"
+INDEX="${3:-*}"
+
+if [[ -z "$QUERY" ]]; then
+	echo "Usage: $0 <query> [range=-1d] [index=filebeat-*]"
+	exit 1
+fi
+
+read -r -d '' TEMPLATE <<'EOF'
+{
+  "query": {
+    "bool": {
+      "must": [
+        {
+          "query_string": {
+            "query": "source:*masty*json* AND loglevel:ERROR",
+            "analyze_wildcard": true,
+            "default_field": "*"
+          }
+        },
+        {
+          "range": {
+            "@timestamp": {
+              "gte": 1528977368658,
+              "lte": 1529063768658,
+              "format": "epoch_millis"
+            }
+          }
+        }
+      ],
+      "filter": [],
+      "should": [],
+      "must_not": []
+    }
+  }
+}
+EOF
+
+RANGE_FROM=$((1000 * $(date -d "$RANGE" +%s)))
+if [[ ! "$?" -eq 0 ]]; then
+	echo "Failure getting range from, are you sure '$RANGE' is a valid format"
+	exit 1
+fi
+
+RANGE_TO=$((1000 * $(date +%s)))
+
+QUERY=$(echo "$QUERY" | sed 's|\\|\\\\|g' | sed 's|"|\\"|g')
+
+QUERY_JSON=$(echo "$TEMPLATE" | \
+	jq '.query.bool.must[0].query_string.query = "'"$QUERY"'"' | \
+	jq '.query.bool.must[1].range["@timestamp"].gte = '"$RANGE_FROM" | \
+	jq '.query.bool.must[1].range["@timestamp"].lte = '"$RANGE_TO")
+
+if [[ ! "$?" -eq 0 ]]; then
+	echo "Failure composing query, aborting"
+	exit 1
+fi
+
+echo "$QUERY_JSON" | curl -s -XPOST -H "Content-type: application/json" -d@- "localhost:9200/$INDEX/_count" | jq .count
+
+if [[ ! "$?" -eq 0 ]]; then
+	echo "Failed issuing query '$QUERY_JSON' to elastic, aborting"
+	exit 1
+fi
+```
