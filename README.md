@@ -92,7 +92,7 @@ zabbix $ apt-get install zabbix-server-mysql
 
 # setup the database for mysql (if you want different values change /etc/zabbix/zabbix_server.conf)
 zabbix $ echo 'create database zabbix' | mysql
-zabbix $ echo 'create user zabbix@localhost'
+zabbix $ echo 'create user zabbix@localhost' | mysql
 zabbix $ echo 'grant all on zabbix.* to zabbix@localhost' | mysql
 
 # seed the database
