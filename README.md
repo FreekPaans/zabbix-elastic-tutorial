@@ -3,7 +3,7 @@
 This training consists of 2 parts. First we'll monitor a _machine_ using only Zabbix. Then we'll monitor an application using a combination of Zabbix, Monolog and ElasticSearch.
 
 In this training we'll use virtual machines to create a private network. As a preparation, make sure you have two clean Ubuntu Bionic (18.04) machines running, and that they can communicate with each other. The easiest way to do this is probably by using `Vagrantfile` in the `vms` directory. To do that, follow the following steps:
-```
+```bash
 $ cd vms
 $ vagrant up
 
@@ -86,7 +86,7 @@ So the steps we need to take are:
 
 Zabbix is available by default with Ubuntu so installation is easy:
 
-```
+```bash
 # this will install zabbix server with the mysql backend (other database backends are available)
 zabbix $ apt-get install zabbix-server-mysql
 
@@ -158,7 +158,7 @@ Congratulations: you've now added your first host to Zabbix. It should look some
 
 Unfortunately, the our web VM isn't running an agent yet. So Zabbix will not be able to connect. After a while this will be clear in the UI by having the _Availability_ column in the hosts overview showing a red _ZBX_ to indicate the agent cannot be reached. You can also go to _Monitoring -> Latest data_ and select the `demo-web` host there to verify that the items are there (coming from the _Template OS Linux_ template), but none have any data. So let's setup the agent on the web server now.
 
-```
+```bash
 web $ apt-get install zabbix-agent
 # stop the agent so we can configure it
 web $ systemctl stop zabbix-agent
@@ -170,7 +170,7 @@ Now edit `/etc/zabbix/zabbix_agentd.conf` to set it up:
 * *Server* Set this to `192.168.50.4`
 * *Hostname* Set this to `demo-web`, the hostname we specified during configuration in Zabbix.
 
-```
+```bash
 web $ systemctl restart zabbix-agent
 web $ tail /var/log/zabbix-agent/zabbix_agentd.log
 => should be something like this, specifically look for errors
@@ -191,7 +191,7 @@ Now, refresh the _Latest data_ page in Zabbix to see that the data is now flowin
 ![/img/zabbix-flowing-in.png](/img/zabbix-flowing-in.png)
 
 Congratulations! You've now setup everything correctly. Be sure to look and play around a bit in Zabbix to get a feel of what's happening before you continue. And just for fun, let's hog the CPU a little bit:
-```
+```bash
 web $ while true; do echo "zabbix rocks" > /dev/null; done
 ```
 Be sure to at least check out _Latest data_ and _Graphs_.
@@ -227,7 +227,7 @@ Then, we need to configure the e-mail server settings, which can be done at _Adm
 
 Finally, we need to actually have a mailserver running on our Zabbix VM. For this, we'll run _mailslurper_ on it:
 
-```
+```bash
 zabbix $ cd ~
 zabbix $ curl -OL https://github.com/mailslurper/mailslurper/releases/download/1.14.1/mailslurper-1.14.1-linux.zip
 zabbix $ apt-get install unzip
@@ -257,7 +257,7 @@ But before we get started, we actually need to log something. For this, there is
 
 Let's get it up and running on web
 
-```
+```bash
 web $ apt-get install composer apache2 libapache2-mod-php unzip
 web $ cd /vagrant/php-login-app
 web $ composer install
@@ -273,7 +273,7 @@ This should provide you with the following nice login screen:
 
 Also, this should have logged something already:
 
-```
+```bash
 web $ tail /logs/php-login-app.log
 => should show something like
 [2019-01-25 10:55:15] php-login-app.INFO: login page requested [] []
@@ -291,7 +291,7 @@ Now that we're logging the stuff we're interested in, our next goal is sending t
 We first install Elasticsearch and Kibana on our Zabbix host
 
 
-```
+```bash
 zabbix $ wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
 zabbix $ echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-6.x.list
 zabbix $ apt-get install openjdk-8-jdk-headless
@@ -329,7 +329,7 @@ If you now go on your host to http://192.168.50.4:5601, kibana should be greetin
 
 Unfortuntely, there isn't any data in kibana yet. For that we need to setup filebeat on our web node:
 
-```
+```bash
 web $ wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
 web $ echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-6.x.list
 web $ apt-get update && apt-get install filebeat
@@ -337,7 +337,7 @@ web $ apt-get update && apt-get install filebeat
 
 We'll configure filebeat to ingest the logs produced by our application, but in order to make that easier, we first let the application just output json. Adjust your `index.php` like this:
 
-```
+```php
 use Monolog\Formatter\JsonFormatter;
 
 // create a log channel
@@ -349,7 +349,7 @@ $log->pushHandler($handler);
 ```
 
 Configure filebeat by setting `/etc/filebeat/filebeat.yml` to:
-```
+```yaml
 filebeat.inputs:
 - type: log
   enabled: true
@@ -372,7 +372,7 @@ processors:
 
 Finally, start filebeat:
 
-```
+```bash
 web $ systemctl start filebeat
 ```
 
