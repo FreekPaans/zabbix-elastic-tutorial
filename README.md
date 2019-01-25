@@ -273,4 +273,112 @@ img/login.png
 
 Also, this should have logged something already:
 
+```
 web $ tail /logs/php-login-app.log
+=> should show something like
+[2019-01-25 10:55:15] php-login-app.INFO: login page requested [] []
+```
+
+Now, add three things to this example application:
+
+1. Log when the login failed due to non-existing login.
+2. Log when the login failed due to invalid password
+3. Log when the user successfully logged in
+
+### Send logging to Elasticsearch
+Now that we're logging the stuff we're interested in, our next goal is sending that data to elasticsearch. To do that, we first have to install the Elastic suite.
+
+We first install Elasticsearch and Kibana on our Zabbix host
+
+
+```
+zabbix $ wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+zabbix $ echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-6.x.list
+zabbix $ apt-get install openjdk-8-jdk-headless
+zabbix $ apt-get update && apt-get install elasticsearch kibana
+zabbix $ systemctl start elasticsearch
+zabbix $ systemctl start kibana
+
+# test if it's working:
+zabbix $ curl localhost:9200
+=> should return something like
+{
+  "name" : "jQ9X9N6",
+  "cluster_name" : "elasticsearch",
+  "cluster_uuid" : "XgMXvPbqQvGiSZylE7bwwA",
+  "version" : {
+    "number" : "6.5.4",
+    "build_flavor" : "default",
+    "build_type" : "deb",
+    "build_hash" : "d2ef93d",
+    "build_date" : "2018-12-17T21:17:40.758843Z",
+    "build_snapshot" : false,
+    "lucene_version" : "7.5.0",
+    "minimum_wire_compatibility_version" : "5.6.0",
+    "minimum_index_compatibility_version" : "5.0.0"
+  },
+  "tagline" : "You Know, for Search"
+}
+```
+
+Change `network.host` in `/etc/elasticsearch/elasticsearch.yml` to `0.0.0.0` to make sure elasticsearch is reachable from the network. Do the same for kibana in `/etc/kibana/kibana.yml` where it's called `server.host`.
+
+If you now go on your host to http://192.168.50.4:5601, kibana should be greeting you, with a screen like this:
+
+img/kibana-welcome.png
+
+Unfortuntely, there isn't any data in kibana yet. For that we need to setup filebeat on our web node:
+
+```
+web $ wget -qO - https://artifacts.elastic.co/GPG-KEY-elasticsearch | apt-key add -
+web $ echo "deb https://artifacts.elastic.co/packages/6.x/apt stable main" | tee -a /etc/apt/sources.list.d/elastic-6.x.list
+web $ apt-get update && apt-get install filebeat
+```
+
+We'll configure filebeat to ingest the logs produced by our application, but in order to make that easier, we first let the application just output json. Adjust your `index.php` like this:
+
+```
+use Monolog\Formatter\JsonFormatter;
+
+// create a log channel
+$log = new Logger('php-login-app');
+$handler = new StreamHandler('/logs/php-login-app.json', Logger::INFO);
+$handler->setFormatter(new JsonFormatter());
+
+$log->pushHandler($handler);
+```
+
+Configure filebeat by setting `/etc/filebeat/filebeat.yml' to:
+```
+filebeat.inputs:
+- type: log
+  enabled: true
+  json.keys_under_root: true
+  json.add_error_key: true
+  paths:
+    - /logs/*.json
+filebeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+setup.template.settings:
+  index.number_of_shards: 3
+setup.kibana:
+output.elasticsearch:
+  hosts: ["192.168.50.4:9200"]
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+```
+
+Finally, start filebeat:
+
+```
+web $ systemctl start filebeat
+```
+
+Now if you go back to Kibana, and then to the _Discover_ tab, it will show it's discovered an index. Create an index pattern for `filebeat-\*`. Index patterns are used by kibana to know which indices it should consider. Select @timestamp as the time column. Finally, go back to discover. Your log messages should be there and fully searchable. Try it out!
+
+Additional fields will also be parsed. Use this to add the login of the user for which the login succeeded or failed.
+
+## Bonus exercise: add Elasticsearch monitoring to Zabbix
+We'd like to monitor in zabbix how many logins failed the last 5 minutes, and set a trigger when that exceeded a certain amount. We can leverage elasticsearch and zabbix UserParameters to make this happen.
